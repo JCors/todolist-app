@@ -40,20 +40,21 @@ const item3 = new Item({
 const defaultItems = [item1, item2, item3];
 
 //	Add defualt item to the Database
-Item.insertMany(defaultItems, function (err) {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log("Successfully default items added to the database");
-	}
-});
 
 app.get("/", function (req, res) {
 	Item.find({}, function (err, foundItems) {
-		console.log(foundItems);
-		res.render("list", { listTitle: "Today", newListItems: foundItems });
+		if (defaultItems === 0) {
+			Item.insertMany(defaultItems, function (err) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log("Successfully Added to the Database");
+				}
+			});
+		} else {
+			res.render("list", { listTitle: "Today", newListItems: foundItems });
+		}
 	});
-	
 });
 
 app.post("/", function (req, res) {
