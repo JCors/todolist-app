@@ -3,7 +3,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const date = require(__dirname + "/date.js");
 const app = express();
 const port = 3000;
 
@@ -24,6 +23,7 @@ const itemsSchema = {
 // Database Schema
 const Item = mongoose.model("Item", itemsSchema);
 
+// Create Object for new Item
 const item1 = new Item({
 	name: "Welcome to your todolist",
 });
@@ -39,11 +39,10 @@ const item3 = new Item({
 //	Default items
 const defaultItems = [item1, item2, item3];
 
-//	Add defualt item to the Database
-
+//	Add default item to the Database
 app.get("/", function (req, res) {
 	Item.find({}, function (err, foundItems) {
-		if (defaultItems === 0) {
+		if (defaultItems.length === 0) {
 			Item.insertMany(defaultItems, function (err) {
 				if (err) {
 					console.log(err);
@@ -51,12 +50,14 @@ app.get("/", function (req, res) {
 					console.log("Successfully Added to the Database");
 				}
 			});
+			res.redirect("/");
 		} else {
 			res.render("list", { listTitle: "Today", newListItems: foundItems });
 		}
 	});
 });
 
+// Redirect to Home Page
 app.post("/", function (req, res) {
 	const item = req.body.newItem;
 	if (req.body.list === "Work") {
@@ -68,10 +69,12 @@ app.post("/", function (req, res) {
 	}
 });
 
+// Access to Work Page
 app.get("/work", function (req, res) {
 	res.render("list", { listTitle: "Work List", newListItems: workItems });
 });
 
+// Post redirect to Work Page
 app.post("/work", function (req, res) {
 	let item = req.body.newItem;
 	if (item !== null || item.length !== 0 || item.undefined) {
@@ -82,10 +85,12 @@ app.post("/work", function (req, res) {
 	}
 });
 
+// Redirect to About Page
 app.get("/about", function (req, res) {
 	res.render("about");
 });
 
+// Port listener
 app.listen(process.env.PORT || port, function () {
 	console.log("Server is running on port " + port);
 });
