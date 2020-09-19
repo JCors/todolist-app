@@ -16,6 +16,7 @@ mongoose.connect("mongodb://localhost:27017/todolistDB", {
 	useUnifiedTopology: true,
 });
 
+// Add Schema for the database
 const itemsSchema = {
 	name: String,
 };
@@ -42,7 +43,7 @@ const defaultItems = [item1, item2, item3];
 //	Add default item to the Database
 app.get("/", function (req, res) {
 	Item.find({}, function (err, foundItems) {
-		if (defaultItems.length === 0) {
+		if (foundItems.length === 0) {
 			Item.insertMany(defaultItems, function (err) {
 				if (err) {
 					console.log(err);
