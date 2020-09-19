@@ -2,6 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const date = require(__dirname + "/date.js");
 const app = express();
 const port = 3000;
@@ -9,8 +10,26 @@ const port = 3000;
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
-const items = ["Buy Food", "Cook Food", "Eat Food"];
-const workItems = [];
+
+// Connect to the Database
+mongoose.connect("mongodb://localhost:27017/todolistDB", {
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+});
+
+
+
+const itemsSchema = {
+	name: {
+		type: String,
+		required: [true, "What is the title?"],
+	}
+};
+
+// Database Schema
+const  Item = mongoose.model()("Item", itemsSchema);
+
+
 
 app.get("/", function (req, res) {
 	const day = date.getDate();
