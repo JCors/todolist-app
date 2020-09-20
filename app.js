@@ -14,6 +14,7 @@ app.set("view engine", "ejs");
 mongoose.connect("mongodb://localhost:27017/todolistDB", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
+	useFindAndModify: false,
 });
 
 // Add Schema for the database
@@ -40,6 +41,15 @@ const item3 = new Item({
 //	Default items
 const defaultItems = [item1, item2, item3];
 
+// Create schema for the List Item with name
+const listSchema = {
+	name: String,
+	items: [itemsSchema],
+};
+
+//	Create List Model
+const List = mongoose.model("List", listSchema);
+
 //	Add default item to the Database
 app.get("/", function (req, res) {
 	Item.find({}, function (err, foundItems) {
@@ -58,32 +68,71 @@ app.get("/", function (req, res) {
 	});
 });
 
+//	Route to the custom list
+app.get("/:customListName", function (req, res) {
+	const customlistName = req.params.customListName;
+
+	List.findOne({ name: customlistName }, function (err, foundList) {
+		if (!err) {
+			if (!foundList) {
+				//Create a custom new list
+				const list = new List({
+					name: customlistName,
+					items: defaultItems,
+				});
+				list.save();
+				res.redirect("/" + customlistName);
+				console.log("Added custom list name");
+			} else {
+				// Show and existing list
+				res.render("list", {
+					listTitle: foundList.name,
+					newListItems: foundList.items,
+				});
+			}
+		}
+	});
+});
+
 // Redirect to Home Page
 app.post("/", function (req, res) {
-	const item = req.body.newItem;
-	if (req.body.list === "Work") {
-		workItems.push(item);
-		res.redirect("/work");
+	const itemName = req.body.newItem;
+	const listName = req.body.list;
+
+	// Create item object
+	const item = new Item({
+		name: itemName,
+	});
+	if (itemName.length > 0) {
+		if (listName === "Today") {
+			item.save();
+			console.log("Successfully Item Added");
+			res.redirect("/");
+		} else {
+			console.log("Executed");
+			List.findOne({ name: listName }, function (err, foundList) {
+				foundList.items.push(item);
+				foundList.save();
+				res.redirect("/" + listName);
+			});
+			console.log("Added to existing item");
+		}
 	} else {
-		items.push(item);
-		res.redirect("/");
+		console.log("Route to custome page");
+		res.redirect("/" + listName);
 	}
 });
 
-// Access to Work Page
-app.get("/work", function (req, res) {
-	res.render("list", { listTitle: "Work List", newListItems: workItems });
-});
-
-// Post redirect to Work Page
-app.post("/work", function (req, res) {
-	let item = req.body.newItem;
-	if (item !== null || item.length !== 0 || item.undefined) {
-		workItems.push(item);
-		res.redirect("/");
-	} else {
-		res.redirect("/");
-	}
+// Redirect to Delete Task Page
+app.post("/delete", function (req, res) {
+	console.log("Route to delete page");
+	const checkItemID = req.body.checkbox;
+	Item.findByIdAndRemove(checkItemID, function (err) {
+		if (!err) {
+			console.log("Successfully deleted the checked item.");
+		}
+	});
+	res.redirect("/");
 });
 
 // Redirect to About Page
