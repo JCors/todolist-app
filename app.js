@@ -3,6 +3,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const _ = require("lodash");
 const app = express();
 const port = 3000;
 
@@ -127,12 +128,26 @@ app.post("/", function (req, res) {
 app.post("/delete", function (req, res) {
 	console.log("Route to delete page");
 	const checkItemID = req.body.checkbox;
-	Item.findByIdAndRemove(checkItemID, function (err) {
-		if (!err) {
-			console.log("Successfully deleted the checked item.");
-		}
-	});
-	res.redirect("/");
+	const listName = req.body.listName;
+
+	if (listName === "Today") {
+		Item.findByIdAndRemove(checkItemID, function (err) {
+			if (!err) {
+				console.log("Successfully deleted the checked item.");
+				res.redirect("/");
+			}
+		});
+	} else {
+		List.findOneAndUpdate(
+			{ name: listName },
+			{ $pull: { items: { _id: checkItemID } } },
+			function (err, foundList) {
+				if(!err){
+					res.redirect("/" + listName);
+				}
+			}
+		);
+	}
 });
 
 // Redirect to About Page
